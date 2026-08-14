@@ -1,0 +1,30 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# Docker
+*.log
+
+# Data (don't commit generated datasets or real instrument data)
+data/generator/output/
+*.db
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Docs exports
+*.aasx
