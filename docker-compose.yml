@@ -10,7 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./data/generator/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./infra/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-passporttwin}"]
       interval: 5s
@@ -18,7 +18,8 @@ services:
       retries: 5
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
     container_name: passporttwin-backend
     env_file: .env
     ports:
@@ -30,15 +31,17 @@ services:
       - ./backend:/app
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
     container_name: passporttwin-frontend
     env_file: .env
     ports:
-      - "8501:8501"
+      - "5173:5173"
     depends_on:
       - backend
     volumes:
       - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   pgdata:

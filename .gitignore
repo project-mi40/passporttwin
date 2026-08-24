@@ -8,11 +8,21 @@ __pycache__/
 venv/
 *.egg-info/
 .pytest_cache/
+.mypy_cache/
 
 # Node / frontend
 node_modules/
 dist/
 build/
+.vite/
+
+# AI / ML artifacts (usually too large for Git)
+ai/models/*.pkl
+ai/models/*.joblib
+ai/models/*.pt
+ai/models/*.h5
+ai/datasets/*.csv
+ai/datasets/*.parquet
 
 # Docker
 *.log
