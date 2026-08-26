@@ -86,4 +86,3 @@ docker compose up
    inconsistency detection).
 3. Demonstrable end-to-end in the Sprint Review, not just unit-tested in isolation.
 4. Documented — even briefly — in `docs/`, since it feeds the memoria later.
-5. Hola
