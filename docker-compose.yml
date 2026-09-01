@@ -2,20 +2,23 @@ services:
   postgres:
     image: postgres:17
     container_name: passporttwin-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-passporttwin}
       POSTGRES_USER: ${POSTGRES_USER:-passporttwin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-passporttwin}"]
       interval: 5s
-      timeout: 5s
+      timeout: 5s 
       retries: 5
+    networks:
+      - passporttwin-net
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -37,6 +40,9 @@ services:
       context: ./backend
     container_name: passporttwin-backend
     env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-passporttwin}:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/passporttwin
+      BASYX_AAS_URL: http://basyx-aas:4001/aasServer
     ports:
       - "8000:8000"
     depends_on:
@@ -44,20 +50,44 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+    networks:
+      - passporttwin-net
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #   container_name: passporttwin-frontend
-  #   env_file: .env
-  #   ports:
-  #     - "5173:5173"
-  #   depends_on:
-  #     - backend
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
+  metabase:
+    image: metabase/metabase:v0.50.0
+    container_name: passporttwin-metabase
+    restart: unless-stopped
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-passporttwin}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-devpassword}
+      MB_DB_HOST: postgres
+      JAVA_TOOL_OPTIONS: "-Xmx1024m -Xms512m"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - passporttwin-net
+
+  basyx-aas:
+    image: eclipsebasyx/aas-server:1.5.1
+    container_name: passporttwin-basyx-aas
+    restart: unless-stopped
+    ports:
+      - "4001:4001"
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xmx1024m"
+    networks:
+      - passporttwin-net
 
 volumes:
   pgdata:
   pgadmin_data:
+
+networks:
+  passporttwin-net:
+    driver: bridge
