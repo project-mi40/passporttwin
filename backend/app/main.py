@@ -5,6 +5,11 @@ This file wires together the FastAPI app. Route logic lives in `api/`,
 configuration in `core/`, DB session handling in `database/`.
 """
 from fastapi import FastAPI
+from app.api import instruments
+from app.database.session import Base, engine
+
+# Auto-crear esquema si no existen las tablas
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="PassportTwin API",
@@ -27,4 +32,4 @@ def health_check():
 
 # Route modules will be included here as they're built, e.g.:
 # from api import instruments
-# app.include_router(instruments.router, prefix="/instruments", tags=["instruments"])
+app.include_router(instruments.router, prefix="/api/v1")

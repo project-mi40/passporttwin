@@ -34,6 +34,8 @@ services:
         condition: service_healthy
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - passporttwin-net
 
   backend:
     build:
@@ -54,7 +56,7 @@ services:
       - passporttwin-net
 
   metabase:
-    image: metabase/metabase:v0.50.0
+    image: metabase/metabase:latest
     container_name: passporttwin-metabase
     restart: unless-stopped
     environment:
@@ -66,7 +68,7 @@ services:
       MB_DB_HOST: postgres
       JAVA_TOOL_OPTIONS: "-Xmx1024m -Xms512m"
     ports:
-      - "3000:3000"
+      - "${METABASE_PORT:-3003}:3002"
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,7 +76,7 @@ services:
       - passporttwin-net
 
   basyx-aas:
-    image: eclipsebasyx/aas-server:1.5.1
+    image: eclipsebasyx/aas-server:1.4.0
     container_name: passporttwin-basyx-aas
     restart: unless-stopped
     ports:

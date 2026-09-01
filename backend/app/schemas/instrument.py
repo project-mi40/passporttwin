@@ -1,0 +1,38 @@
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
+from uuid import UUID
+from datetime import datetime
+
+class InstrumentTypeBase(BaseModel):
+    name: str
+    family: str
+    magnitude: str
+    unit: str
+
+class InstrumentTypeCreate(InstrumentTypeBase):
+    pass
+
+class InstrumentTypeResponse(InstrumentTypeBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class InstrumentUnitCreate(BaseModel):
+    instrument_type_id: int
+    serial_number: str
+    manufacturer: str
+    model: str
+    location: Optional[str] = "Plant-A/Area-1"
+    criticality: Optional[str] = "MEDIUM"
+
+class InstrumentUnitResponse(BaseModel):
+    id: int
+    public_id: UUID
+    serial_number: str
+    manufacturer: str
+    model: str
+    location: Optional[str]
+    criticality: str
+    lifecycle_state: str
+    aas_sync_status: str
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
