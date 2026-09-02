@@ -7,8 +7,7 @@ from app.schemas.instrument import (
     InstrumentTypeCreate, 
     InstrumentTypeResponse, 
     InstrumentUnitCreate, 
-    InstrumentUnitResponse
-)
+    InstrumentUnitResponse)
 from app.services.aas_builder import AASBuilder
 
 router = APIRouter(prefix="/instruments", tags=["instruments"])
