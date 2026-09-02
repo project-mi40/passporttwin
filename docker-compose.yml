@@ -12,6 +12,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./infra/postgres/init/00-create-metabase-db.sql:/docker-entrypoint-initdb.d/00-create-metabase-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-passporttwin}"]
       interval: 5s
@@ -68,7 +69,7 @@ services:
       MB_DB_HOST: postgres
       JAVA_TOOL_OPTIONS: "-Xmx1024m -Xms512m"
     ports:
-      - "${METABASE_PORT:-3003}:3002"
+      - "${METABASE_PORT:-3003}:3000"
     depends_on:
       postgres:
         condition: service_healthy

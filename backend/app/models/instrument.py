@@ -1,3 +1,8 @@
+#########################################################
+#Refleja las tablas existentes en infra/postgres/schema.sql añadiendo el identificador 
+# public_id para desacoplar el QR del serial según la decisión ADR-009
+##########################################################
+
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Date
@@ -10,12 +15,11 @@ class InstrumentType(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, unique=True) # e.g., 'pressure_transmitter'
-    family = Column(String, nullable=False)            # e.g., 'Pressure'
     magnitude = Column(String, nullable=False)         # e.g., 'Pressure'
     unit = Column(String, nullable=False)              # e.g., 'bar'
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    instruments = relationship("InstrumentUnit", back_populates="instrument_type")
+    units = relationship("InstrumentUnit", back_populates="instrument_type")
 
 class InstrumentUnit(Base):
     __tablename__ = "instrument_unit"
@@ -28,8 +32,9 @@ class InstrumentUnit(Base):
     model = Column(String, nullable=False)
     location = Column(String, nullable=True)
     criticality = Column(String, default="MEDIUM")
+    installed_at = Column(Date, nullable=True)
     lifecycle_state = Column(String, default="operational")
-    aas_sync_status = Column(String, default="PENDING") # PENDING | SYNCED | ERROR
+    aas_sync_status = Column(String, default="PENDING") # PENDING | SYNCED | ERROR  HAY QUE REVISAR ESTE NO APARECE EN LA BASE DE DATOS
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    instrument_type = relationship("InstrumentType", back_populates="instruments")
+    instrument_type = relationship("InstrumentType", back_populates="units")

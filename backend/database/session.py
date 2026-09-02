@@ -1,3 +1,8 @@
+#######################################################
+#Este archivo para gestionar el pool de conexiones hacia 
+# PostgreSQL mediante SQLAlchemy
+#######################################################
+
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker

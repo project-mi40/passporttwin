@@ -1,11 +1,14 @@
+##############################################
+#Asegura el tipado estricto para las operaciones de la API REST
+###############################################
+
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 
 class InstrumentTypeBase(BaseModel):
     name: str
-    family: str
     magnitude: str
     unit: str
 
@@ -23,6 +26,7 @@ class InstrumentUnitCreate(BaseModel):
     model: str
     location: Optional[str] = "Plant-A/Area-1"
     criticality: Optional[str] = "MEDIUM"
+    installed_at: Optional[date] = None
 
 class InstrumentUnitResponse(BaseModel):
     id: int
@@ -31,7 +35,7 @@ class InstrumentUnitResponse(BaseModel):
     manufacturer: str
     model: str
     location: Optional[str]
-    criticality: str
+    criticality: Optional[str]
     lifecycle_state: str
     aas_sync_status: str
     created_at: datetime
