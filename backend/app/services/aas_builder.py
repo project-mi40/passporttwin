@@ -2,50 +2,41 @@ import os
 import requests
 import logging
 
-
 logger = logging.getLogger("passporttwin.aas")
 BASYX_AAS_URL = os.getenv("BASYX_AAS_URL", "http://basyx-aas:4001/aasServer")
 
 class AASBuilder:
     @staticmethod
     def sync_shell_and_nameplate(instrument, instrument_type) -> bool:
-        """Proyecta un activo canónico a una Asset Administration Shell en BaSyx."""
+        """Proyecta un activo canónico hacia Eclipse BaSyx AAS Server v1.4.0."""
+        clean_serial = instrument.serial_number.replace("-", "_")
+        aas_id_short = f"AAS_{clean_serial}"
         aas_id = f"urn:passporttwin:aas:{instrument.serial_number}"
         asset_id = f"urn:passporttwin:asset:{instrument.serial_number}"
-        sm_id = f"urn:passporttwin:submodel:nameplate:{instrument.serial_number}"
         
-        payload = {
-            "idShort": f"AAS_{instrument.serial_number}",
+        # 1. Payload de la AAS
+        shell_payload = {
+            "idShort": aas_id_short,
             "identification": {
                 "id": aas_id,
                 "idType": "IRI"
             },
             "asset": {
-                "idShort": f"Asset_{instrument.serial_number}",
+                "idShort": f"Asset_{clean_serial}",
                 "identification": {
                     "id": asset_id,
                     "idType": "IRI"
                 },
                 "kind": "Instance"
             },
-            "submodels": [
-                {
-                    "keys": [
-                        {
-                            "type": "Submodel",
-                            "local": False,
-                            "value": sm_id,
-                            "idType": "IRI"
-                        }
-                    ]
-                }
-            ]
+            "submodels": []
         }
 
+        # 2. Payload del Submodelo Digital Nameplate (IDTA 02006)
         nameplate_payload = {
             "idShort": "Nameplate",
             "identification": {
-                "id": sm_id,
+                "id": f"urn:passporttwin:submodel:nameplate:{instrument.serial_number}",
                 "idType": "IRI"
             },
             "semanticId": {
@@ -86,21 +77,25 @@ class AASBuilder:
             ]
         }
 
-        try:
-            # Enviar AAS Shell
-            url_shells = f"{BASYX_AAS_URL}/shells"
-            resp_shell = requests.post(url_shells, json=shell_payload, timeout=4)
-            if resp_shell.status_code not in [200, 201]:
-                # Intentar PUT si ya existe
-                requests.put(f"{url_shells}/{shell_payload['idShort']}", json=shell_payload, timeout=4)
+        headers = {"Content-Type": "application/json"}
 
-            # Enviar Submodel Nameplate
-            url_sm = f"{BASYX_AAS_URL}/submodels"
-            resp_sm = requests.post(url_sm, json=nameplate_payload, timeout=4)
+        try:
+            # A. Registrar/actualizar la AAS en el Aggregator
+            url_shell = f"{BASYX_AAS_URL}/shells/{aas_id_short}"
+            resp_shell = requests.put(url_shell, json=shell_payload, headers=headers, timeout=5)
+            if resp_shell.status_code not in [200, 201]:
+                logger.error(f"Error creando AAS ({resp_shell.status_code}): {resp_shell.text}")
+                return False
+
+            # B. Registrar el Submodelo directamente dentro de la AAS
+            url_submodel = f"{BASYX_AAS_URL}/shells/{aas_id_short}/aas/submodels/Nameplate"
+            resp_sm = requests.put(url_submodel, json=nameplate_payload, headers=headers, timeout=5)
             if resp_sm.status_code not in [200, 201]:
-                requests.put(f"{url_sm}/{nameplate_payload['idShort']}", json=nameplate_payload, timeout=4)
+                logger.error(f"Error vinculando submodelo ({resp_sm.status_code}): {resp_sm.text}")
+                return False
 
             return True
+
         except Exception as e:
-            logger.error(f"Fallo al sincronizar con BaSyx AAS Server: {str(e)}")
+            logger.error(f"Fallo de comunicación con BaSyx AAS: {str(e)}")
             return False
