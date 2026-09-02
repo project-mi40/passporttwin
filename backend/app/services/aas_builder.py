@@ -2,14 +2,13 @@ import os
 import requests
 import logging
 
-from backend.app.schemas import instrument
 
 logger = logging.getLogger("passporttwin.aas")
 BASYX_AAS_URL = os.getenv("BASYX_AAS_URL", "http://basyx-aas:4001/aasServer")
 
 class AASBuilder:
     @staticmethod
-    def sync_instrument_shell(instrument, instrument_type) -> bool:
+    def sync_shell_and_nameplate(instrument, instrument_type) -> bool:
         """Proyecta un activo canónico a una Asset Administration Shell en BaSyx."""
         aas_id = f"urn:passporttwin:aas:{instrument.serial_number}"
         asset_id = f"urn:passporttwin:asset:{instrument.serial_number}"
