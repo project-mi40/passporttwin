@@ -10,22 +10,22 @@ class AASBuilder:
     def sync_shell_and_nameplate(instrument, instrument_type) -> bool:
         """Proyecta un activo canónico hacia Eclipse BaSyx AAS Server v1.4.0."""
         clean_serial = instrument.serial_number.replace("-", "_")
-        aas_id_short = f"AAS_{clean_serial}"
-        aas_id = f"urn:passporttwin:aas:{instrument.serial_number}"
-        asset_id = f"urn:passporttwin:asset:{instrument.serial_number}"
-        
-        # 1. Payload de la AAS
+        aas_id = f"AAS_{clean_serial}"
+        asset_id = f"Asset_{clean_serial}"
+        sm_id = f"Submodel_Nameplate_{clean_serial}"
+
+        # 1. Payload de la AAS (identification.id DEBE coincidir con el ID de la URL)
         shell_payload = {
-            "idShort": aas_id_short,
+            "idShort": aas_id,
             "identification": {
                 "id": aas_id,
-                "idType": "IRI"
+                "idType": "Custom"
             },
             "asset": {
-                "idShort": f"Asset_{clean_serial}",
+                "idShort": asset_id,
                 "identification": {
                     "id": asset_id,
-                    "idType": "IRI"
+                    "idType": "Custom"
                 },
                 "kind": "Instance"
             },
@@ -36,8 +36,8 @@ class AASBuilder:
         nameplate_payload = {
             "idShort": "Nameplate",
             "identification": {
-                "id": f"urn:passporttwin:submodel:nameplate:{instrument.serial_number}",
-                "idType": "IRI"
+                "id": sm_id,
+                "idType": "Custom"
             },
             "semanticId": {
                 "keys": [
@@ -80,15 +80,15 @@ class AASBuilder:
         headers = {"Content-Type": "application/json"}
 
         try:
-            # A. Registrar/actualizar la AAS en el Aggregator
-            url_shell = f"{BASYX_AAS_URL}/shells/{aas_id_short}"
+            # A. Registrar o actualizar la AAS en el Aggregator de BaSyx
+            url_shell = f"{BASYX_AAS_URL}/shells/{aas_id}"
             resp_shell = requests.put(url_shell, json=shell_payload, headers=headers, timeout=5)
             if resp_shell.status_code not in [200, 201]:
                 logger.error(f"Error creando AAS ({resp_shell.status_code}): {resp_shell.text}")
                 return False
 
-            # B. Registrar el Submodelo directamente dentro de la AAS
-            url_submodel = f"{BASYX_AAS_URL}/shells/{aas_id_short}/aas/submodels/Nameplate"
+            # B. Registrar el Submodelo dentro de la AAS
+            url_submodel = f"{BASYX_AAS_URL}/shells/{aas_id}/aas/submodels/Nameplate"
             resp_sm = requests.put(url_submodel, json=nameplate_payload, headers=headers, timeout=5)
             if resp_sm.status_code not in [200, 201]:
                 logger.error(f"Error vinculando submodelo ({resp_sm.status_code}): {resp_sm.text}")
